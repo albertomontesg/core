@@ -1257,17 +1257,10 @@ class Event(Generic[_DataT]):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return _event_repr(self.event_type, self.origin, self.data)
-
-
-def _event_repr(
-    event_type: str, origin: EventOrigin, data: Mapping[str, Any] | None
-) -> str:
-    """Return the representation."""
-    if data:
-        return f"<Event {event_type}[{str(origin)[0]}]: {util.repr_helper(data)}>"
-
-    return f"<Event {event_type}[{str(origin)[0]}]>"
+        data_str = ""
+        if self.data:
+            data_str = f": {util.repr_helper(self.data)}"
+        return f"<Event {self.event_type}[{str(self.origin)[0]}]{data_str}>"
 
 
 _FilterableJobType = tuple[
@@ -1384,11 +1377,6 @@ class EventBus:
         This method must be run in the event loop.
         """
 
-        if self._debug:
-            _LOGGER.debug(
-                "Bus:Handling %s", _event_repr(event_type, origin, event_data)
-            )
-
         listeners = self._listeners.get(event_type, EMPTY_LIST)
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             match_all_listeners = self._match_all_listeners
@@ -1402,8 +1390,6 @@ class EventBus:
         if not listeners:
             return
 
-        event: Event | None = None
-
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:
@@ -1413,14 +1399,16 @@ class EventBus:
                     _LOGGER.exception("Error in event filter")
                     continue
 
-            if not event:
-                event = Event(
-                    event_type,
-                    event_data,
-                    origin,
-                    time_fired,
-                    context,
-                )
+            event: Event = Event(
+                event_type,
+                event_data,
+                origin,
+                time_fired,
+                context,
+            )
+
+            if self._debug:
+                _LOGGER.debug("Bus:Handling %s", event)
 
             if run_immediately:
                 try:

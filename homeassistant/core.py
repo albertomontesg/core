@@ -196,14 +196,14 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+_VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
+_VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
 
 
 @functools.lru_cache(64)
 def valid_domain(domain: str) -> bool:
     """Test if a domain a valid format."""
-    return VALID_DOMAIN.match(domain) is not None
+    return _VALID_DOMAIN.match(domain) is not None
 
 
 @functools.lru_cache(512)
@@ -212,7 +212,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
     Format: <domain>.<entity> where both are slugs.
     """
-    return VALID_ENTITY_ID.match(entity_id) is not None
+    return _VALID_ENTITY_ID.match(entity_id) is not None
 
 
 def validate_state(state: str) -> str:

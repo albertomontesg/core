@@ -15,7 +15,13 @@ from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ReleaseChannel,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
@@ -557,7 +563,7 @@ class DeviceRegistry(BaseRegistry):
         try:
             return name.format(**translation_placeholders)
         except KeyError as err:
-            if get_release_channel() != "stable":
+            if get_release_channel() != ReleaseChannel.STABLE:
                 raise HomeAssistantError("Missing placeholder %s" % err) from err
             report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=domain

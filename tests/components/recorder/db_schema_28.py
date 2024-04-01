@@ -101,7 +101,7 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_ORDER = [EventOrigin.LOCAL, EventOrigin.REMOTE]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"

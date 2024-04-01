@@ -70,7 +70,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
-        if event.origin != EventOrigin.local:
+        if event.origin != EventOrigin.LOCAL:
             return
 
         # Events to ignore
@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     event_data[key] = state
 
         hass.bus.async_fire(
-            event_type, event_data=event_data, origin=EventOrigin.remote
+            event_type, event_data=event_data, origin=EventOrigin.REMOTE
         )
 
     # Only subscribe if you specified a topic.

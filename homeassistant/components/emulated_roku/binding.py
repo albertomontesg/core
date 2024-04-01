@@ -70,7 +70,7 @@ class EmulatedRoku:
                         ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYDOWN,
                         ATTR_KEY: key,
                     },
-                    EventOrigin.local,
+                    EventOrigin.LOCAL,
                 )
 
             def on_keyup(self, roku_usn, key):
@@ -82,7 +82,7 @@ class EmulatedRoku:
                         ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYUP,
                         ATTR_KEY: key,
                     },
-                    EventOrigin.local,
+                    EventOrigin.LOCAL,
                 )
 
             def on_keypress(self, roku_usn, key):
@@ -94,7 +94,7 @@ class EmulatedRoku:
                         ATTR_COMMAND_TYPE: ROKU_COMMAND_KEYPRESS,
                         ATTR_KEY: key,
                     },
-                    EventOrigin.local,
+                    EventOrigin.LOCAL,
                 )
 
             def launch(self, roku_usn, app_id):
@@ -106,7 +106,7 @@ class EmulatedRoku:
                         ATTR_COMMAND_TYPE: ROKU_COMMAND_LAUNCH,
                         ATTR_APP_ID: app_id,
                     },
-                    EventOrigin.local,
+                    EventOrigin.LOCAL,
                 )
 
         LOGGER.debug(

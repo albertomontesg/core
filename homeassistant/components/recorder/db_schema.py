@@ -48,6 +48,7 @@ from homeassistant.util.json import (
     json_loads,
     json_loads_object,
 )
+from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
@@ -225,7 +226,7 @@ class JSONLiteral(JSON):
         return process
 
 
-EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_ORDER = [EventOrigin.LOCAL, EventOrigin.REMOTE]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
@@ -260,7 +261,7 @@ class Events(Base):
     data_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("event_data.data_id"), index=True
     )
-    context_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_id_bin: Mapped[bytes] = mapped_column(CONTEXT_BINARY_TYPE)
     context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     event_type_id: Mapped[int | None] = mapped_column(
@@ -300,7 +301,7 @@ class Events(Base):
             time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
             context_id=None,
-            context_id_bin=ulid_to_bytes_or_none(event.context.id),
+            context_id_bin=ulid_to_bytes(event.context.id),
             context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(event.context.user_id),
             context_parent_id=None,
@@ -310,18 +311,18 @@ class Events(Base):
     def to_native(self, validate_entity_id: bool = True) -> Event | None:
         """Convert to a native HA Event."""
         context = Context(
-            id=bytes_to_ulid_or_none(self.context_id_bin),
+            id=bytes_to_ulid(self.context_id_bin),
             user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
             return Event(
-                self.event_type or "",
-                json_loads_object(self.event_data) if self.event_data else {},
-                EventOrigin(self.origin)
+                event_type=self.event_type or "",
+                data=json_loads_object(self.event_data) if self.event_data else {},
+                origin=EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                self.time_fired_ts or 0,
+                time_fired_timestamp=self.time_fired_ts or 0,
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -447,7 +448,7 @@ class States(Base):
     )  # 0 is local, 1 is remote
     old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
-    context_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_id_bin: Mapped[bytes] = mapped_column(CONTEXT_BINARY_TYPE)
     context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     metadata_id: Mapped[int | None] = mapped_column(
@@ -519,7 +520,7 @@ class States(Base):
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
         context = Context(
-            id=bytes_to_ulid_or_none(self.context_id_bin),
+            id=bytes_to_ulid(self.context_id_bin),
             user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )

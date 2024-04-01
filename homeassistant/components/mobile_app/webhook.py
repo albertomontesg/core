@@ -316,7 +316,7 @@ async def webhook_fire_event(
     hass.bus.async_fire(
         event_type,
         data[ATTR_EVENT_DATA],
-        EventOrigin.remote,
+        EventOrigin.REMOTE,
         context=registration_context(config_entry.data),
     )
     return empty_okay_response()

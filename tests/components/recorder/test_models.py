@@ -249,7 +249,7 @@ async def test_event_to_db_model() -> None:
     event = ha.Event(
         "state_changed",
         {"some": "attr"},
-        ha.EventOrigin.local,
+        ha.EventOrigin.LOCAL,
         dt_util.utcnow().timestamp(),
     )
     db_event = Events.from_event(event)

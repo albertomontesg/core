@@ -190,7 +190,7 @@ class JSONLiteral(JSON):  # type: ignore[misc]
         return process
 
 
-EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_ORDER = [EventOrigin.LOCAL, EventOrigin.REMOTE]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 

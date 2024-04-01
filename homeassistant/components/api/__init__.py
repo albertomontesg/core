@@ -345,7 +345,7 @@ class APIEventView(HomeAssistantView):
                     event_data[key] = state
 
         request.app[KEY_HASS].bus.async_fire(
-            event_type, event_data, ha.EventOrigin.remote, self.context(request)
+            event_type, event_data, ha.EventOrigin.REMOTE, self.context(request)
         )
 
         return self.json_message(f"Event {event_type} fired.")

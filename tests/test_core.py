@@ -861,7 +861,10 @@ def test_event_eq() -> None:
     context = ha.Context()
     event1, event2 = (
         ha.Event(
-            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+            event_type="some_type",
+            data=data,
+            time_fired_timestamp=now.timestamp(),
+            context=context,
         )
         for _ in range(2)
     )
@@ -873,7 +876,9 @@ def test_event_time() -> None:
     """Test time_fired and time_fired_timestamp."""
     now = dt_util.utcnow()
     event = ha.Event(
-        "some_type", {"some": "attr"}, time_fired_timestamp=now.timestamp()
+        event_type="some_type",
+        data={"some": "attr"},
+        time_fired_timestamp=now.timestamp(),
     )
     assert event.time_fired_timestamp == now.timestamp()
     assert event.time_fired == now
@@ -886,7 +891,10 @@ def test_event_json_fragment() -> None:
     context = ha.Context()
     event1, event2 = (
         ha.Event(
-            "some_type", data, time_fired_timestamp=now.timestamp(), context=context
+            event_type="some_type",
+            data=data,
+            time_fired_timestamp=now.timestamp(),
+            context=context,
         )
         for _ in range(2)
     )
@@ -916,10 +924,16 @@ def test_event_json_fragment() -> None:
 
 def test_event_repr() -> None:
     """Test that Event repr method works."""
-    assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+    assert str(ha.Event(event_type="TestEvent")) == "<Event TestEvent[L]>"
 
     assert (
-        str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+        str(
+            ha.Event(
+                event_type="TestEvent",
+                data={"beer": "nice"},
+                origin=ha.EventOrigin.REMOTE,
+            )
+        )
         == "<Event TestEvent[R]: beer=nice>"
     )
 
@@ -930,7 +944,12 @@ def test_event_as_dict() -> None:
     now = dt_util.utcnow()
     data = {"some": "attr"}
 
-    event = ha.Event(event_type, data, ha.EventOrigin.local, now.timestamp())
+    event = ha.Event(
+        event_type=event_type,
+        data=data,
+        origin=ha.EventOrigin.LOCAL,
+        time_fired_timestamp=now.timestamp(),
+    )
     expected = {
         "event_type": event_type,
         "data": data,

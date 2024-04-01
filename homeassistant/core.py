@@ -1176,36 +1176,30 @@ class Context:
         return json_fragment(json_bytes(self.as_dict()))
 
 
-class EventOrigin(enum.Enum):
+class EventOrigin(enum.StrEnum):
     """Represent the origin of an event."""
 
-    local = "LOCAL"
-    remote = "REMOTE"
-
-    def __str__(self) -> str:
-        """Return the event."""
-        return self.value
+    LOCAL = "LOCAL"
+    REMOTE = "REMOTE"
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
-    def __init__(
-        self,
-        event_type: str,
-        data: _DataT | None = None,
-        origin: EventOrigin = EventOrigin.local,
-        time_fired_timestamp: float | None = None,
-        context: Context | None = None,
-    ) -> None:
-        """Initialize a new event."""
-        self.event_type = event_type
-        self.data: _DataT = data or {}  # type: ignore[assignment]
-        self.origin = origin
-        self.time_fired_timestamp = time_fired_timestamp or time.time()
-        self.context = context or Context(
-            id=ulid_at_time(self.time_fired_timestamp), origin_event=self
-        )
+    event_type: str
+    data: _DataT = dataclasses.field(default_factory=dict)  # type: ignore[assignment]
+    origin: EventOrigin = EventOrigin.LOCAL
+    time_fired_timestamp: float = dataclasses.field(default_factory=time.time)
+    context: Context = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if not self.context:
+            object.__setattr__(
+                self,
+                "context",
+                Context(id=ulid_at_time(self.time_fired_timestamp), origin_event=self),
+            )
 
     @cached_property
     def time_fired(self) -> datetime.datetime:
@@ -1219,13 +1213,10 @@ class Event(Generic[_DataT]):
         Callers should be careful to not mutate the returned dictionary
         as it will mutate the cached version.
         """
-        return {
-            "event_type": self.event_type,
-            "data": self.data,
-            "origin": self.origin.value,
-            "time_fired": self.time_fired.isoformat(),
-            "context": self.context.as_dict(),
-        }
+        dict_ = dataclasses.asdict(self)
+        del dict_["time_fired_timestamp"]
+        dict_["time_fired"] = self.time_fired.isoformat()
+        return dict_
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a ReadOnlyDict representation of this Event.
@@ -1336,7 +1327,7 @@ class EventBus:
         self,
         event_type: str,
         event_data: Mapping[str, Any] | None = None,
-        origin: EventOrigin = EventOrigin.local,
+        origin: EventOrigin = EventOrigin.LOCAL,
         context: Context | None = None,
     ) -> None:
         """Fire an event."""
@@ -1349,7 +1340,7 @@ class EventBus:
         self,
         event_type: str,
         event_data: Mapping[str, Any] | None = None,
-        origin: EventOrigin = EventOrigin.local,
+        origin: EventOrigin = EventOrigin.LOCAL,
         context: Context | None = None,
         time_fired: float | None = None,
     ) -> None:
@@ -1368,9 +1359,9 @@ class EventBus:
         self,
         event_type: str,
         event_data: Mapping[str, Any] | None = None,
-        origin: EventOrigin = EventOrigin.local,
+        origin: EventOrigin = EventOrigin.LOCAL,
         context: Context | None = None,
-        time_fired: float | None = None,
+        time_fired_timestamp: float | None = None,
     ) -> None:
         """Fire an event.
 
@@ -1399,12 +1390,18 @@ class EventBus:
                     _LOGGER.exception("Error in event filter")
                     continue
 
+            event_kwargs: dict[str, Any] = {}
+            if event_data is not None:
+                event_kwargs["data"] = event_data
+            if context is not None:
+                event_kwargs["context"] = context
+            if time_fired_timestamp is not None:
+                event_kwargs["time_fired_timestamp"] = time_fired_timestamp
+
             event: Event = Event(
-                event_type,
-                event_data,
-                origin,
-                time_fired,
-                context,
+                event_type=event_type,
+                origin=origin,
+                **event_kwargs,
             )
 
             if self._debug:
@@ -2107,7 +2104,7 @@ class StateMachine:
                     "new_state": old_state,
                 },
                 context=context,
-                time_fired=timestamp,
+                time_fired_timestamp=timestamp,
             )
             return
 
@@ -2141,7 +2138,7 @@ class StateMachine:
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             context=context,
-            time_fired=timestamp,
+            time_fired_timestamp=timestamp,
         )
 
 

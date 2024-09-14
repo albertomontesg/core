@@ -166,8 +166,9 @@ class NetioSwitch(SwitchEntity):
         self._set(False)
 
     def _set(self, value):
-        val = "uuuu"
+        val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
+        val = "".join(val)
         self.netio.get(f"port list {val}")
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()

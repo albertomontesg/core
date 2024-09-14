@@ -288,9 +288,11 @@ def _migrate_schema(
             "The database is about to upgrade from schema version %s to %s%s",
             current_version,
             end_version,
-            f". {MIGRATION_NOTE_OFFLINE}"
-            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
-            else "",
+            (
+                f". {MIGRATION_NOTE_OFFLINE}"
+                if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+                else ""
+            ),
         )
         schema_status = dataclass_replace(schema_status, current_version=end_version)
 
@@ -526,7 +528,8 @@ def _modify_columns(
 
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
-            "ALTER " + " TYPE ".join(col_def.split(" ", 1)) for col_def in columns_def
+            f"ALTER {column} TYPE {type_}"
+            for column, type_ in (col_def.split(" ", 1) for col_def in columns_def)
         ]
     elif engine.dialect.name == "mssql":
         columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
